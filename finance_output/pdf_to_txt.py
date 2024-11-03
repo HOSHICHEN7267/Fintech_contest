@@ -102,7 +102,7 @@ def B_type_converison(pdf_path, output_txt_path):
     print(f"IMAGE: conversion done, the txt file is saved at {output_txt_path}")
 
 
-for i in range(643):
+for i in range(1,643):
     pdf_path = "./競賽資料集/reference/insurance/" + str(i) + ".pdf"    # .pdf 檔位置
     out_path = "./output_txt/insurance/"                               # 輸出 .txt 檔位置
     os.makedirs(out_path, exist_ok=True)
