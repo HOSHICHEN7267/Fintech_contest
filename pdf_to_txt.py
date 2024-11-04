@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image, ImageEnhance
 import re
 
+B_type_list = []
 
 # pdf file type:
 #     A: text 
@@ -24,12 +25,13 @@ def has_extractable_text(doc):
         return False                               # False: B
     
 
-def pdf_to_text(pdf_path, output_txt_path):
+def pdf_to_text(i, pdf_path, output_txt_path):
     doc = fitz.open(pdf_path)                      # 開啟 PDF 文件
 
     if has_extractable_text(doc):                  # A type pdf file
         A_type_converison(doc, output_txt_path)
     else:                                          # B type pdf file
+        B_type_list.append(i)
         B_type_converison(pdf_path, output_txt_path)
 
 
@@ -43,14 +45,28 @@ def A_type_converison(doc, output_txt_path):
     
     # 去除頁碼，例如 "第 X 頁，共 Y 頁" 或類似的頁碼格式
     extracted_text = re.sub(r'第\s*\d+\s*頁[\s，、]*共\s*\d+\s*頁', '', extracted_text)
-    # page_match = re.match(r'第\s*\d+\s*頁[\s，、]*共\s*\d+\s*頁', extracted_text)
-    # print(page_match.group(0))
 
     # 去除常見的條款或項目編號
     extracted_text = re.sub(r'^\s*[一二三四五六七八九十]{1,2}\s*[、．.：:]', '', extracted_text, flags=re.MULTILINE)  # 去除「一、二、三…」
     extracted_text = re.sub(r'^\s*\d+\s*[、．.：:]', '', extracted_text, flags=re.MULTILINE)  # 去除「1、2、3…」
-    extracted_text = re.sub(r'^\s*（[一二三四五六七八九十]{1,2}）', '', extracted_text, flags=re.MULTILINE)  # 去除「（一）、（二）…」
-    extracted_text = re.sub(r'^\s*（\d+）', '', extracted_text, flags=re.MULTILINE)  # 去除「（1）、（2）…」
+
+    extracted_text = re.sub(r'\([一二三四五六七八九十]{1,2}\)', '', extracted_text)# 去除半形括號
+    extracted_text = re.sub(r'\(\d+\)', '', extracted_text)
+
+    extracted_text = re.sub(r'（[一二三四五六七八九十]+）', '', extracted_text)  # 去除全形括號
+    extracted_text = re.sub(r'（\d+）', '', extracted_text)  
+
+    extracted_text = re.sub(r'~\d+~', '', extracted_text)  # 匹配並刪除 ~59~ 類似格式
+    extracted_text = re.sub(r'-\s*\d+\s*-', '', extracted_text)  # 匹配並刪除 - 5 - 類似格式
+
+    # 去除金額（匹配格式如 $ 1,789 或 123,456 或 56,485,523 的數字）
+    extracted_text = re.sub(r'\$?\s*\d{1,3}(?:,\d{3})+', '', extracted_text)
+
+    # 去除單獨的金額（匹配格式如 $ 123 或 $ 12.15 或 $545）
+    extracted_text = re.sub(r'\$\s*\d+(\.\d{1,2})?', '', extracted_text)
+
+    # 去除所有空格和換行符
+    extracted_text = re.sub(r'\s+', '', extracted_text)
 
     with open(output_txt_path, 'w', encoding='utf-8') as txt_file:   # 將提取的文本寫入到 txt 檔
         txt_file.write(extracted_text)
@@ -66,8 +82,9 @@ def B_type_converison(pdf_path, output_txt_path):
     # 將 PDF 文件每頁轉換為圖片
     pages = convert_from_path(pdf_path, dpi=300)
 
-    # 處理每一頁圖片並進行 OCR
+    # 去除紅色印章
     for i, page in enumerate(pages):
+
         # 將圖片轉換為 RGB 模式，並存儲為臨時文件，便於使用 OpenCV 進行處理
         page_rgb = page.convert('RGB')
         page_np = np.array(page_rgb)  # 將 PIL Image 轉換為 numpy 數組
@@ -98,22 +115,36 @@ def B_type_converison(pdf_path, output_txt_path):
         # 轉為黑白模式
         processed_image = processed_image.convert('L')
 
-        # 顯示處理後的圖片（可選）
-        #processed_image.show()
-
         # 進行 OCR
         ocr_text = pytesseract.image_to_string(processed_image, lang='chi_tra')
         extracted_text += ocr_text + "\n"
-
-        #print(f"Page {i + 1}:\n{text}\n")   
+  
     # 去除頁碼，例如 "第 X 頁，共 Y 頁" 或類似的頁碼格式
     extracted_text = re.sub(r'第\s*\d+\s*頁[\s，、]*共\s*\d+\s*頁', '', extracted_text)
 
     # 去除常見的條款或項目編號
     extracted_text = re.sub(r'^\s*[一二三四五六七八九十]{1,2}\s*[、．.：:]', '', extracted_text, flags=re.MULTILINE)  # 去除「一、二、三…」
     extracted_text = re.sub(r'^\s*\d+\s*[、．.：:]', '', extracted_text, flags=re.MULTILINE)  # 去除「1、2、3…」
-    extracted_text = re.sub(r'^\s*（[一二三四五六七八九十]{1,2}）', '', extracted_text, flags=re.MULTILINE)  # 去除「（一）、（二）…」
-    extracted_text = re.sub(r'^\s*（\d+）', '', extracted_text, flags=re.MULTILINE)  # 去除「（1）、（2）…」
+    extracted_text = re.sub(r'\([一二三四五六七八九十]{1,2}\)', '', extracted_text)# 去除半形括號
+    extracted_text = re.sub(r'\(\d+\)', '', extracted_text)
+
+    extracted_text = re.sub(r'（[一二三四五六七八九十]+）', '', extracted_text)  # 去除全形括號
+    extracted_text = re.sub(r'（\d+）', '', extracted_text)  
+
+    extracted_text = re.sub(r'~\d+~', '', extracted_text)  # 匹配並刪除 ~59~ 類似格式
+    extracted_text = re.sub(r'-\s*\d+\s*-', '', extracted_text)  # 匹配並刪除 - 5 - 類似格式
+
+    # 635.557 應為 635,557
+    extracted_text = re.sub(r'(\d{1,3})\.(\d{3})\b', r'\1,\2', extracted_text)
+
+    # 去除金額（匹配格式如 $ 1,789 或 123,456 或 56,485,523 的數字）
+    extracted_text = re.sub(r'\$?\s*\d{1,3}(?:,\d{3})+', '', extracted_text)
+
+    # 去除單獨的金額（匹配格式如 $ 123 或 $ 12.15 或 $545）
+    extracted_text = re.sub(r'\$\s*\d+(\.\d{1,2})?', '', extracted_text)
+
+    # 去除所有空格和換行符
+    extracted_text = re.sub(r'\s+', '', extracted_text)
 
     # 將提取的文本寫入到 txt 檔
     with open(output_txt_path, 'w', encoding='utf-8') as txt_file:
@@ -122,14 +153,44 @@ def B_type_converison(pdf_path, output_txt_path):
     print(f"IMAGE: conversion done, the txt file is saved at {output_txt_path}")
 
 
-for i in range(1,643):
-    pdf_path = "./競賽資料集/reference/insurance/" + str(i) + ".pdf"    # .pdf 檔位置
-    out_path = "./output_txt/insurance/"                               # 輸出 .txt 檔位置
+
+"""for i in range(0,1035):
+    pdf_path = "競賽資料集\\reference\\finance\\" + str(i) + ".pdf"    # .pdf 檔位置
+    out_path = "output_txt\\finance\\"              # 輸出 .txt 檔位置
     os.makedirs(out_path, exist_ok=True)
     output_txt_path = out_path + str(i) + ".txt"
 
-    pdf_to_text(pdf_path, output_txt_path)
+    pdf_to_text(i, pdf_path, output_txt_path)
     
+
+# record B type pdf file
+image_pdf_path = "output_txt\\finance_image_pdf_file.txt"
+text = ""
+for i in range(len(B_type_list)):
+    text = text + str(B_type_list[i]) + ".pdf" + '\n'
+
+with open(image_pdf_path, 'w', encoding='utf-8') as txt_file:
+    txt_file.write(text)"""
+
+
+for i in range(1,644):
+    pdf_path = "競賽資料集\\reference\\insurance\\" + str(i) + ".pdf"    # .pdf 檔位置
+    out_path = "output_txt\\insurance\\"              # 輸出 .txt 檔位置
+    os.makedirs(out_path, exist_ok=True)
+    output_txt_path = out_path + str(i) + ".txt"
+
+    pdf_to_text(i, pdf_path, output_txt_path)
+    
+
+# record B type pdf file
+image_pdf_path = "output_txt\\insurance_image_pdf_file.txt"
+text = ""
+for i in range(len(B_type_list)):
+    text = text + str(B_type_list[i]) + ".pdf" + '\n'
+
+with open(image_pdf_path, 'w', encoding='utf-8') as txt_file:
+    txt_file.write(text)
+
     
     
     
