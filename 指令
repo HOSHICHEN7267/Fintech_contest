@@ -1,0 +1,3 @@
+python BERT_retrieve.py  --question_path ./QA/QA_organized/testInsurance.json --source_path ./output_txt --output_path ./QA/answer/Insurance/bert_dis.json
+
+python BERT_retrieve.py  --question_path ./QA/QA_organized/testFinance.json --source_path ./output_txt --output_path ./QA/answer/Finance/bert_dis.json
