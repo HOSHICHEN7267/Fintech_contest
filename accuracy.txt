@@ -1,15 +1,15 @@
  
-                                           finace   Insurance   finace(1105)   Insurance(1105)
+                                           finace   Insurance   finace(1105)   Insurance(1105)      FAQ
 'sentence-transformers/all-MiniLM-L6-v2'   #28%       #36%          #32%           #32%             
 'moka-ai/m3e-base'                         #56%       #54%          #54%           #50%
-'paraphrase-xlm-r-multilingual-v1'         #18%       #20%          #18%           #20%
-'distiluse-base-multilingual-cased-v2'     #50%       #36%          #50%           #36%
+'paraphrase-xlm-r-multilingual-v1'         #18%       #20%          #18%           #20% 
+'distiluse-base-multilingual-cased-v2'     #50%       #36%          #50%           #36%              94%      
 
 'bert-base-chinese' (no jieba)              #0%
 
 BM25                                       #48%       #80%          #54%           #80%
 BM25 no cama                               #44%       #78%          #54%           #80%
 
-LCS                                        #44%       #88%          #38%           #88%
+LCS                                        #44%       #88%          #38%           #88%               90%
 
-combine_moka(0.6, 0.4)                                              #54%           #84%
+combine_moka(0.6, 0.4)                                              #54%           #84%               94%

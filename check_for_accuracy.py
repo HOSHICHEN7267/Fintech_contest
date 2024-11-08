@@ -49,14 +49,19 @@ def compare_json_files(ground_truth_path, prediction_path):
     print(f"正確率：{correct}/{total} = {accuracy:.2f}")
 
 
-subject = 'combine_moka.json'
+subject = 'sbert_dis.json'
 
-ground_truth_path = './codes_for_retrive/QA_organized/testANSFinance.json'
-prediction_path = './codes_for_retrive/answer/Finance/'
+ground_truth_path = './QA/QA_organized/testANSFinance.json'
+prediction_path = './QA/answer/Finance/'
 print("Finance:", end = " " )
 compare_json_files(ground_truth_path, os.path.join(prediction_path, subject))
 
-ground_truth_path = './codes_for_retrive/QA_organized/testANSInsurance.json'
-prediction_path = './codes_for_retrive/answer/Insurance/'
+ground_truth_path = './QA/QA_organized/testANSInsurance.json'
+prediction_path = './QA/answer/Insurance/'
 print("Insurance:", end = " " )
+compare_json_files(ground_truth_path, os.path.join(prediction_path, subject))
+
+ground_truth_path = './QA/QA_organized/testANSFAQ.json'
+prediction_path = './QA/answer/FAQ/'
+print("FAQ:", end = " " )
 compare_json_files(ground_truth_path, os.path.join(prediction_path, subject))
