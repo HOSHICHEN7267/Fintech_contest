@@ -6,7 +6,6 @@ import numpy as np
 
 from tqdm import tqdm
 import jieba  # 用於中文文本分詞
-import pdfplumber  # 用於從PDF文件中提取文字的工具
 from rank_bm25 import BM25Okapi  # 使用BM25演算法進行文件檢索
 
 from sentence_transformers import SentenceTransformer, util
@@ -14,7 +13,6 @@ from sentence_transformers import SentenceTransformer, util
 import torch
 from transformers import BertTokenizer, BertModel
 import torch.nn.functional as F
-from sklearn.metrics.pairwise import cosine_similarity
 
 def load_data(source_path):
     # 獲取資料夾中的檔案列表
@@ -242,17 +240,17 @@ if __name__ == "__main__":
 
         if q_dict['category'] == 'finance':
             # 進行檢索
-            retrieved = BM25_retrieve(q_dict['query'], q_dict['source'], corpus_dict_finance)
+            retrieved = combined_retrieve(q_dict['query'], q_dict['source'], corpus_dict_finance)
             # 將結果加入字典
             answer_dict['answers'].append({"qid": q_dict['qid'], "retrieve": retrieved})
 
         elif q_dict['category'] == 'insurance':
-            retrieved = LCS(q_dict['query'], q_dict['source'], corpus_dict_insurance)
+            retrieved = combined_retrieve(q_dict['query'], q_dict['source'], corpus_dict_insurance)
             answer_dict['answers'].append({"qid": q_dict['qid'], "retrieve": retrieved})
 
         elif q_dict['category'] == 'faq':
             corpus_dict_faq = {key: str(value) for key, value in key_to_source_dict.items() if key in q_dict['source']}
-            retrieved = SBERT_retrieve(q_dict['query'], q_dict['source'], corpus_dict_faq)
+            retrieved = combined_retrieve(q_dict['query'], q_dict['source'], corpus_dict_faq)
             answer_dict['answers'].append({"qid": q_dict['qid'], "retrieve": retrieved})
 
         else:
